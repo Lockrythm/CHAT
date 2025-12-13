@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lockrythm</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img id="my-avatar" class="avatar" src="" alt="Me">
+                <span id="my-name" style="font-weight:bold;"></span>
+                <button class="icon-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <div class="user-list" id="user-list">
+                </div>
+        </div>
+
+        <div class="chat-area" id="chat-area">
+            <div class="chat-header" id="chat-header" style="display:none;">
+                <div style="display:flex; align-items:center;">
+                    <img id="chat-avatar" class="avatar" src="">
+                    <div>
+                        <div id="chat-name" style="font-weight:bold;">User</div>
+                        <div id="chat-status" style="font-size:0.8rem; color:#8696a0;">offline</div>
+                    </div>
+                </div>
+                <div>
+                    <button class="icon-btn" id="video-call-btn"><i class="fas fa-video"></i></button>
+                    <button class="icon-btn" id="audio-call-btn"><i class="fas fa-phone"></i></button>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messages-container">
+                <div style="text-align:center; margin-top: 50px; color: #555;">
+                    <h3>Welcome to Lockrythm</h3>
+                    <p>Select a contact to start chatting securely.</p>
+                </div>
+            </div>
+
+			<div class="chat-input-area" id="input-area" style="display:none;">
+				<button class="icon-btn"><i class="fas fa-plus"></i></button> <input type="text" id="message-input" placeholder="Type a message">
+				<button class="icon-btn" id="send-btn"><i class="fas fa-paper-plane"></i></button>
+			</div>
+        </div>
+    </div>
+
+    <div id="call-modal">
+        <div style="color:white; margin-bottom:10px;" id="call-status">Calling...</div>
+        <div style="display: flex; gap: 10px;">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay playsinline muted style="width: 100px; position:absolute; bottom:20px; right:20px; border:2px solid white;"></video>
+        </div>
+        <button class="auth-btn" style="background:red; width: 100px;" id="hangup-btn">End Call</button>
+    </div>
+
+    <script type="module" src="js/chat.js"></script>
+</body>
+</html>
