@@ -10,71 +10,157 @@ const servers = {
 let peerConnection = null;
 let localStream = null;
 let remoteStream = null;
-let unsubscribe = null; // To stop listening when call ends
+let dataChannel = null;
+let unsubscribe = null;
 
-// 1. Initialize Media (Camera/Mic)
+// FILE TRANSFER VARIABLES
+let receivedBuffers = [];
+let receivedSize = 0;
+let fileSize = 0;
+let fileName = "";
+let fileType = "";
+
+// 1. Initialize Media
 async function openMediaSources() {
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const localVideo = document.getElementById("localVideo");
-        if (localVideo) {
+        if(localVideo) {
             localVideo.srcObject = localStream;
-            localVideo.muted = true; // Mute yourself to avoid feedback loop
+            localVideo.muted = true;
         }
         
         remoteStream = new MediaStream();
         const remoteVideo = document.getElementById("remoteVideo");
-        if (remoteVideo) remoteVideo.srcObject = remoteStream;
-
+        if(remoteVideo) remoteVideo.srcObject = remoteStream;
+        
         return true;
     } catch (error) {
-        console.error("Error accessing media devices:", error);
-        alert("Could not access camera/microphone.");
+        console.error("Media Error:", error);
+        alert("Camera/Mic required for calls.");
         return false;
     }
 }
 
-// 2. CREATE A CALL (Caller Side)
+// 2. DATA CHANNEL (P2P Storage)
+function setupDataChannel(pc) {
+    pc.ondatachannel = (event) => {
+        const receiveChannel = event.channel;
+        receiveChannel.onmessage = handleReceiveMessage;
+    };
+}
+
+function createDataChannel(pc) {
+    dataChannel = pc.createDataChannel("fileTransfer");
+    dataChannel.onmessage = handleReceiveMessage;
+    return dataChannel;
+}
+
+// 3. HANDLE INCOMING FILES
+function handleReceiveMessage(event) {
+    const data = event.data;
+
+    if (typeof data === 'string') {
+        const meta = JSON.parse(data);
+        if(meta.type === 'metadata') {
+            receivedBuffers = [];
+            receivedSize = 0;
+            fileName = meta.fileName;
+            fileSize = meta.fileSize;
+            fileType = meta.fileType;
+            console.log(`Receiving ${fileName}...`);
+        }
+        return;
+    }
+
+    receivedBuffers.push(data);
+    receivedSize += data.byteLength;
+
+    if (receivedSize === fileSize) {
+        const blob = new Blob(receivedBuffers, { type: fileType });
+        receivedBuffers = [];
+        const url = URL.createObjectURL(blob);
+        
+        // Dispatch event to chat.js
+        const customEvent = new CustomEvent('webrtc-file-received', { 
+            detail: { url, name: fileName, type: fileType } 
+        });
+        document.dispatchEvent(customEvent);
+    }
+}
+
+// 4. SEND FILE FUNCTION
+export function sendFileViaWebRTC(file) {
+    if (!dataChannel || dataChannel.readyState !== 'open') {
+        alert("No P2P Connection. Start a call first!");
+        return false;
+    }
+
+    // Send Metadata
+    const meta = JSON.stringify({
+        type: 'metadata',
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+    });
+    dataChannel.send(meta);
+
+    // Send File in Chunks
+    const chunkSize = 16384; 
+    const fileReader = new FileReader();
+    let offset = 0;
+
+    fileReader.onload = (e) => {
+        dataChannel.send(e.target.result);
+        offset += e.target.result.byteLength;
+        if (offset < file.size) {
+            readSlice(offset);
+        }
+    };
+
+    const readSlice = (o) => {
+        const slice = file.slice(o, o + chunkSize);
+        fileReader.readAsArrayBuffer(slice);
+    };
+
+    readSlice(0);
+    return true;
+}
+
+// 5. CALL LOGIC
 export async function startCall(receiverId) {
     const success = await openMediaSources();
     if (!success) return;
 
     document.getElementById("call-modal").style.display = "flex";
     
-    // Create Call Doc
     const callDocRef = doc(collection(db, "calls"));
     const offerCandidates = collection(callDocRef, "offerCandidates");
     const answerCandidates = collection(callDocRef, "answerCandidates");
 
     peerConnection = new RTCPeerConnection(servers);
+    createDataChannel(peerConnection); // Init Data Channel
 
-    // Add local tracks to connection
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-    // Listen for remote tracks
     peerConnection.ontrack = event => {
         event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
     };
 
-    // ICE Candidates (Internet Connection info)
     peerConnection.onicecandidate = event => {
         if (event.candidate) addDoc(offerCandidates, event.candidate.toJSON());
     };
 
-    // Create Offer
     const offerDescription = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offerDescription);
 
-    const callOffer = {
+    await setDoc(callDocRef, {
         offer: { type: offerDescription.type, sdp: offerDescription.sdp },
         callerId: auth.currentUser.uid,
         receiverId: receiverId,
-        status: "ringing" // Initial status
-    };
+        status: "ringing"
+    });
 
-    await setDoc(callDocRef, callOffer);
-
-    // Listen for Answer
     unsubscribe = onSnapshot(callDocRef, (snapshot) => {
         const data = snapshot.data();
         if (!peerConnection.currentRemoteDescription && data?.answer) {
@@ -84,7 +170,6 @@ export async function startCall(receiverId) {
         }
     });
 
-    // Listen for remote ICE candidates
     onSnapshot(answerCandidates, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             if (change.type === 'added') {
@@ -94,11 +179,9 @@ export async function startCall(receiverId) {
         });
     });
 
-    // Save Call ID to button for hangup
     document.getElementById("hangup-btn").onclick = () => endCall(callDocRef.id);
 }
 
-// 3. ANSWER A CALL (Receiver Side)
 export async function answerCall(callId) {
     const success = await openMediaSources();
     if (!success) return;
@@ -111,6 +194,7 @@ export async function answerCall(callId) {
     const offerCandidates = collection(callDocRef, "offerCandidates");
 
     peerConnection = new RTCPeerConnection(servers);
+    setupDataChannel(peerConnection); // Setup Listener
 
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
@@ -122,22 +206,18 @@ export async function answerCall(callId) {
         if (event.candidate) addDoc(answerCandidates, event.candidate.toJSON());
     };
 
-    // Fetch Offer
     const callSnapshot = await getDoc(callDocRef);
     const callData = callSnapshot.data();
 
-    const offerDescription = callData.offer;
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offerDescription));
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
 
     const answerDescription = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answerDescription);
 
-    const answer = {
-        type: answerDescription.type,
-        sdp: answerDescription.sdp,
-    };
-
-    await updateDoc(callDocRef, { answer, status: "connected" });
+    await updateDoc(callDocRef, {
+        answer: { type: answerDescription.type, sdp: answerDescription.sdp },
+        status: "connected"
+    });
 
     onSnapshot(offerCandidates, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
@@ -151,18 +231,17 @@ export async function answerCall(callId) {
     document.getElementById("hangup-btn").onclick = () => endCall(callId);
 }
 
-// 4. END CALL
+export function isCallActive() {
+    return (dataChannel && dataChannel.readyState === 'open');
+}
+
 async function endCall(callId) {
     if (peerConnection) peerConnection.close();
-    if (localStream) localStream.getTracks().forEach(track => track.stop()); // Turn off camera
+    if (dataChannel) dataChannel.close();
+    if (localStream) localStream.getTracks().forEach(track => track.stop());
     
     document.getElementById("call-modal").style.display = "none";
-    
-    if(callId) {
-        // Optionally delete the call doc or mark as ended
-        await updateDoc(doc(db, "calls", callId), { status: "ended" });
-    }
-    
+    if(callId) await updateDoc(doc(db, "calls", callId), { status: "ended" });
     if (unsubscribe) unsubscribe();
-    window.location.reload(); // Simple reset
+    window.location.reload();
 }
