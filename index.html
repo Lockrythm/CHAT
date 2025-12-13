@@ -2,17 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Lockrythm - Login</title>
+    <title>Lockrythm 2.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="auth-container">
-        <h1>Lockrythm 🔒</h1>
-        <p>Secure, Free, Private.</p>
-        <button class="auth-btn" id="google-login-btn">Login with Google</button>
-        <p style="font-size: 0.8rem; margin-top: 20px; color: #888;">No phone numbers. Just clean code.</p>
+    <div class="auth-wrapper">
+        <div class="auth-box">
+            <h1 style="margin-bottom: 5px;">Lockrythm</h1>
+            <p style="color:var(--text-muted); margin-bottom: 20px;">Secure. Fast. Yours.</p>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="switchTab('google')">Google</button>
+                <button class="tab-btn" onclick="switchTab('email')">Email</button>
+                <button class="tab-btn" onclick="switchTab('phone')">Phone</button>
+            </div>
+
+            <div id="tab-google">
+                <button id="google-btn" style="background: white; color: black;">
+                    <img src="https://fonts.gstatic.com/s/i/productlogos/googleg_32dp/v6/24px.svg" style="vertical-align:middle; width:20px; margin-right:8px;">
+                    Continue with Google
+                </button>
+            </div>
+
+            <div id="tab-email" style="display:none;">
+                <input type="email" id="email-in" placeholder="Email Address">
+                <input type="password" id="pass-in" placeholder="Password">
+                <button id="email-login-btn">Login / Sign Up</button>
+            </div>
+
+            <div id="tab-phone" style="display:none;">
+                <input type="tel" id="phone-in" placeholder="+1 234 567 8900">
+                <div id="recaptcha-container"></div>
+                <button id="phone-btn">Send Code</button>
+                <div id="otp-area" style="display:none;">
+                    <input type="text" id="otp-in" placeholder="Enter Code">
+                    <button id="otp-verify-btn">Verify</button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('[onclick="switchTab(\''+tab+'\')"]').forEach(b => b.classList.add('active'));
+            document.getElementById('tab-google').style.display = tab === 'google' ? 'block' : 'none';
+            document.getElementById('tab-email').style.display = tab === 'email' ? 'block' : 'none';
+            document.getElementById('tab-phone').style.display = tab === 'phone' ? 'block' : 'none';
+        }
+    </script>
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
