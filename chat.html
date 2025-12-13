@@ -2,21 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Lockrythm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lockrythm 2.0</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
-                <img id="my-avatar" class="avatar" src="" alt="Me">
-                <span id="my-name" style="font-weight:bold;"></span>
-                <button class="icon-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+                <div style="display:flex; align-items:center;">
+                    <img id="my-avatar" class="avatar" src="https://via.placeholder.com/40" alt="Me">
+                    <span id="my-name" style="font-weight:bold; font-size: 0.9rem;">Loading...</span>
+                </div>
+                <button class="icon-btn" id="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
             <div class="user-list" id="user-list">
-                </div>
+                <div style="padding:20px; text-align:center; color:#666;">Loading contacts...</div>
+            </div>
         </div>
 
         <div class="chat-area" id="chat-area">
@@ -25,36 +30,59 @@
                     <img id="chat-avatar" class="avatar" src="">
                     <div>
                         <div id="chat-name" style="font-weight:bold;">User</div>
-                        <div id="chat-status" style="font-size:0.8rem; color:#8696a0;">offline</div>
+                        <div id="chat-status" style="font-size:0.75rem; color:var(--primary);">Online</div>
                     </div>
                 </div>
-                <div>
-                    <button class="icon-btn" id="video-call-btn"><i class="fas fa-video"></i></button>
-                    <button class="icon-btn" id="audio-call-btn"><i class="fas fa-phone"></i></button>
+                <div class="header-actions">
+                    <button class="icon-btn" id="video-call-btn" title="Video Call"><i class="fas fa-video"></i></button>
+                    <button class="icon-btn" id="audio-call-btn" title="Audio Call"><i class="fas fa-phone"></i></button>
                 </div>
             </div>
 
             <div class="messages-container" id="messages-container">
-                <div style="text-align:center; margin-top: 50px; color: #555;">
+                <div class="welcome-msg">
+                    <i class="fas fa-lock" style="font-size: 3rem; margin-bottom: 20px; color: var(--border);"></i>
                     <h3>Welcome to Lockrythm</h3>
-                    <p>Select a contact to start chatting securely.</p>
+                    <p>Select a contact to start encryption.</p>
                 </div>
             </div>
 
-			<div class="chat-input-area" id="input-area" style="display:none;">
-				<button class="icon-btn"><i class="fas fa-plus"></i></button> <input type="text" id="message-input" placeholder="Type a message">
-				<button class="icon-btn" id="send-btn"><i class="fas fa-paper-plane"></i></button>
-			</div>
+            <div class="input-area" id="input-area" style="display:none;">
+                <input type="file" id="media-input" hidden accept="image/*,video/*">
+                
+                <button class="icon-btn" onclick="document.getElementById('media-input').click()" title="Send Photo/Video">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+
+                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+                
+                <button class="icon-btn" id="mic-btn" title="Record Voice">
+                    <i class="fas fa-microphone"></i>
+                </button>
+
+                <button class="icon-btn" id="send-btn" style="color:var(--primary); display:none;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <div id="recording-overlay" style="display:none; position:absolute; bottom:80px; left:50%; transform:translateX(-50%); background:red; color:white; padding:10px 20px; border-radius:20px; box-shadow: 0 4px 15px rgba(255,0,0,0.3);">
+                <i class="fas fa-circle-notch fa-spin"></i> Recording... <span id="rec-timer">0:00</span>
+                <button id="cancel-rec-btn" style="margin-left:10px; background:none; border:none; color:white; cursor:pointer; font-weight:bold;">X</button>
+            </div>
         </div>
     </div>
 
     <div id="call-modal">
-        <div style="color:white; margin-bottom:10px;" id="call-status">Calling...</div>
-        <div style="display: flex; gap: 10px;">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo" autoplay playsinline muted style="width: 100px; position:absolute; bottom:20px; right:20px; border:2px solid white;"></video>
+        <div class="call-wrapper">
+            <div style="color:white; margin-bottom:15px; font-size:1.2rem;" id="call-status">Calling...</div>
+            <div class="video-grid">
+                <video id="remoteVideo" autoplay playsinline class="remote-vid"></video>
+                <video id="localVideo" autoplay playsinline muted class="local-vid"></video>
+            </div>
+            <div class="call-controls">
+                <button class="end-call-btn" id="hangup-btn"><i class="fas fa-phone-slash"></i> End Call</button>
+            </div>
         </div>
-        <button class="auth-btn" style="background:red; width: 100px;" id="hangup-btn">End Call</button>
     </div>
 
     <script type="module" src="js/chat.js"></script>
