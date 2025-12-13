@@ -2,44 +2,20 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-// REMOVED STORAGE IMPORT
-
-  const firebaseConfig = {
-
-    apiKey: "AIzaSyD9VAI5ULb0uHj4AFHIJwUs_A0TNEw8cFw",
-
-    authDomain: "lockrythm-31a20.firebaseapp.com",
-
-    databaseURL: "https://lockrythm-31a20-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-    projectId: "lockrythm-31a20",
-
-    storageBucket: "lockrythm-31a20.firebasestorage.app",
-
-    messagingSenderId: "850988951870",
-
-    appId: "1:850988951870:web:c4901a026c06e21fb7646f"
-
-  };
-
-
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const rtdb = getDatabase(app);
-// REMOVED STORAGE EXPORTimport { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-// REMOVED STORAGE IMPORT
+import { getStorage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
 const firebaseConfig = {
-  // ... PASTE YOUR KEYS HERE ...
+    apiKey: "AIzaSyD9VAI5ULb0uHj4AFHIJwUs_A0TNEw8cFw",
+    authDomain: "lockrythm-31a20.firebaseapp.com",
+    databaseURL: "https://lockrythm-31a20-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "lockrythm-31a20",
+    storageBucket: "lockrythm-31a20.firebasestorage.app",
+    messagingSenderId: "850988951870",
+    appId: "1:850988951870:web:c4901a026c06e21fb7646f"
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
-// REMOVED STORAGE EXPORT
+export const storage = getStorage(app);
