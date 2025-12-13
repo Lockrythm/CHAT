@@ -2,17 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Lockrythm - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lockrythm Login</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="auth-container">
-        <h1>Lockrythm 🔒</h1>
-        <p>Secure, Free, Private.</p>
-        <button class="auth-btn" id="google-login-btn">Login with Google</button>
-        <p style="font-size: 0.8rem; margin-top: 20px; color: #888;">No phone numbers. Just clean code.</p>
+    <div class="auth-wrapper">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+
+        <div class="auth-box">
+            <div class="brand-header">
+                <div class="lock-icon">🔒</div>
+                <h1>Lockrythm</h1>
+                <p>Private. Secure. Limitless.</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="switchTab('google')">Google</button>
+                <button class="tab-btn" onclick="switchTab('email')">Email</button>
+                <button class="tab-btn" onclick="switchTab('phone')">Phone</button>
+            </div>
+
+            <div id="tab-google" class="tab-content">
+                <button id="google-btn" class="social-btn">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+                    <span>Continue with Google</span>
+                </button>
+            </div>
+
+            <div id="tab-email" class="tab-content" style="display:none;">
+                <div class="input-group">
+                    <input type="email" id="email-in" placeholder=" " required>
+                    <label>Email Address</label>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="pass-in" placeholder=" " required>
+                    <label>Password</label>
+                </div>
+                <button id="email-login-btn" class="action-btn">Login / Sign Up</button>
+            </div>
+
+            <div id="tab-phone" class="tab-content" style="display:none;">
+                <div class="input-group">
+                    <input type="tel" id="phone-in" placeholder=" " required>
+                    <label>Phone (+1 234...)</label>
+                </div>
+                <div id="recaptcha-container"></div>
+                
+                <button id="phone-btn" class="action-btn">Send Code</button>
+                
+                <div id="otp-area" style="display:none; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                    <p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Enter the code sent to your phone</p>
+                    <div class="input-group">
+                        <input type="text" id="otp-in" placeholder=" " style="letter-spacing: 5px; text-align: center;">
+                        <label style="left:50%; transform:translateX(-50%);">123456</label>
+                    </div>
+                    <button id="otp-verify-btn" class="action-btn">Verify Code</button>
+                </div>
+            </div>
+            
+            <p class="footer-text">End-to-end encrypted connection</p>
+        </div>
     </div>
 
+    <script>
+        // Simple Tab Switcher Script
+        function switchTab(tab) {
+            // Remove active class from buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            
+            // Activate selected
+            document.querySelector(`button[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+        }
+    </script>
     <script type="module" src="js/auth.js"></script>
 </body>
 </html>
