@@ -14,8 +14,20 @@ onAuthStateChanged(auth, (user) => {
     if (!user) return window.location.href = "index.html";
     currentUser = user;
     
-    document.getElementById("my-name").textContent = user.displayName || user.email.split('@')[0];
-    document.getElementById("my-avatar").src = user.photoURL || "https://via.placeholder.com/40";
+    // --- FIX START: ROBUST NAME CHECK ---
+    // If no name, try email. If no email, try phone. If no phone, say "User".
+    let safeName = user.displayName;
+    if (!safeName && user.email) safeName = user.email.split('@')[0];
+    if (!safeName && user.phoneNumber) safeName = user.phoneNumber;
+    if (!safeName) safeName = "User";
+    
+    document.getElementById("my-name").textContent = safeName;
+    // --- FIX END ---
+
+    // --- FIX START: ROBUST AVATAR CHECK ---
+    // Use a reliable default if photoURL is missing
+    document.getElementById("my-avatar").src = user.photoURL || `https://ui-avatars.com/api/?name=${safeName}&background=random`;
+    // --- FIX END ---
 
     const userStatusRef = dbRef(rtdb, '/status/' + user.uid);
     set(userStatusRef, { state: 'online', last_changed: serverTimestamp() });
@@ -46,10 +58,14 @@ function loadContacts() {
             if (u.uid === currentUser.uid) return;
             const item = document.createElement("div");
             item.className = "user-item";
+            // Use same safe avatar logic for friends
+            const friendName = u.name || "User";
+            const friendPic = u.photoURL || `https://ui-avatars.com/api/?name=${friendName}&background=random`;
+            
             item.innerHTML = `
-                <img src="${u.photoURL}" class="avatar">
+                <img src="${friendPic}" class="avatar">
                 <div style="flex:1;">
-                    <div style="font-weight:600;">${u.name}</div>
+                    <div style="font-weight:600;">${friendName}</div>
                     <div style="font-size:0.8rem; color:#aaa;">Tap to chat</div>
                 </div>`;
             item.onclick = () => loadChat(u);
@@ -62,8 +78,8 @@ function loadChat(user) {
     currentChatId = [currentUser.uid, user.uid].sort().join("_");
     document.getElementById("chat-header").style.display = "flex";
     document.getElementById("input-area").style.display = "flex";
-    document.getElementById("chat-name").textContent = user.name;
-    document.getElementById("chat-avatar").src = user.photoURL;
+    document.getElementById("chat-name").textContent = user.name || "User";
+    document.getElementById("chat-avatar").src = user.photoURL || `https://ui-avatars.com/api/?name=${user.name}&background=random`;
 
     const q = query(collection(db, "chats", currentChatId, "messages"), orderBy("timestamp", "asc"));
     onSnapshot(q, snap => {
