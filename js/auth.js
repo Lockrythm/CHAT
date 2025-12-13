@@ -1,36 +1,89 @@
 import { auth, db } from "./firebase-config.js";
-import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { 
+    GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    RecaptchaVerifier, signInWithPhoneNumber 
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { doc, setDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-const provider = new GoogleAuthProvider();
-
-// Check if already logged in
+// Global redirect check
 onAuthStateChanged(auth, (user) => {
     if (user && window.location.pathname.includes("index.html")) {
         window.location.href = "chat.html";
     }
 });
 
-const loginBtn = document.getElementById("google-login-btn");
-if (loginBtn) {
-    loginBtn.addEventListener("click", async () => {
+// 1. Google Login
+const googleBtn = document.getElementById("google-btn");
+if (googleBtn) {
+    googleBtn.onclick = async () => {
+        const provider = new GoogleAuthProvider();
         try {
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
+            const res = await signInWithPopup(auth, provider);
+            await saveUser(res.user);
+        } catch (e) { alert(e.message); }
+    };
+}
 
-            // Save user to Firestore
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                name: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                lastSeen: serverTimestamp()
-            }, { merge: true });
-
-            window.location.href = "chat.html";
-        } catch (error) {
-            console.error("Login failed:", error);
-            alert("Login failed: " + error.message);
+// 2. Email Login/Signup
+const emailBtn = document.getElementById("email-login-btn");
+if (emailBtn) {
+    emailBtn.onclick = async () => {
+        const email = document.getElementById("email-in").value;
+        const pass = document.getElementById("pass-in").value;
+        try {
+            // Try login first
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (e) {
+            // If user not found, create new
+            if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
+                 try {
+                     const res = await createUserWithEmailAndPassword(auth, email, pass);
+                     await saveUser(res.user);
+                 } catch (err) { alert(err.message); }
+            } else {
+                alert(e.message);
+            }
         }
-    });
+    };
+}
+
+// 3. Phone Login
+const phoneBtn = document.getElementById("phone-btn");
+if (phoneBtn) {
+    window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', { 'size': 'invisible' }, auth);
+    
+    phoneBtn.onclick = async () => {
+        const number = document.getElementById("phone-in").value;
+        try {
+            window.confirmationResult = await signInWithPhoneNumber(auth, number, window.recaptchaVerifier);
+            document.getElementById("otp-area").style.display = "block";
+            phoneBtn.style.display = "none";
+        } catch (e) { alert("Phone Error: " + e.message); }
+    };
+
+    document.getElementById("otp-verify-btn").onclick = async () => {
+        const code = document.getElementById("otp-in").value;
+        try {
+            const res = await window.confirmationResult.confirm(code);
+            await saveUser(res.user);
+        } catch (e) { alert("Invalid Code"); }
+    };
+}
+
+// Helper: Save User to Firestore
+async function saveUser(user) {
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    
+    if (!snap.exists()) {
+        await setDoc(userRef, {
+            uid: user.uid,
+            name: user.displayName || user.email || user.phoneNumber, 
+            email: user.email || "",
+            photoURL: user.photoURL || "https://ui-avatars.com/api/?background=random&name=" + (user.email || "User"),
+            createdAt: serverTimestamp()
+        });
+    }
+    window.location.href = "chat.html";
 }
