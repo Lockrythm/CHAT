@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
@@ -19,3 +19,12 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
+
+// Enable Offline Persistence (WhatsApp-like behavior)
+enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+        console.warn("Multiple tabs open, persistence disabled");
+    } else if (err.code == 'unimplemented') {
+        console.warn("Browser doesn't support persistence");
+    }
+});
