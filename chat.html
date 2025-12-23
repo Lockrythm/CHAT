@@ -2,88 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lockrythm 2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lockrythm</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div style="display:flex; align-items:center;">
-                    <img id="my-avatar" class="avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="Me">
-                    <span id="my-name" style="font-weight:bold; font-size: 0.9rem;">Loading...</span>
+    
+    <div class="app-container" id="app-container">
+        
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div class="user-profile">
+                    <img id="my-avatar" class="avatar" src="https://ui-avatars.com/api/?background=random&color=fff" alt="Profile">
+                    <div>
+                        <div id="my-name" style="font-weight: 600;">Loading...</div>
+                        <div style="font-size: 0.8rem; color: var(--primary);">Online</div>
+                    </div>
                 </div>
                 <button class="icon-btn" id="logout-btn" title="Logout">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
-            </div>
+            </header>
+            
             <div class="user-list" id="user-list">
-                <div style="padding:20px; text-align:center; color:#666;">Loading contacts...</div>
+                <div style="text-align:center; padding:20px; color:var(--text-muted);">
+                    <i class="fas fa-circle-notch fa-spin"></i> Loading contacts...
+                </div>
             </div>
-        </div>
+        </aside>
 
-        <div class="chat-area" id="chat-area">
-            <div class="chat-header" id="chat-header" style="display:none;">
-                <div style="display:flex; align-items:center;">
-                    <img id="chat-avatar" class="avatar" src="">
+        <main class="chat-area" id="chat-area">
+            
+            <header class="chat-header" id="chat-header" style="visibility: hidden;"> <div style="display:flex; align-items:center;">
+                    <button class="back-btn" id="back-btn" onclick="closeChat()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    
+                    <img id="chat-avatar" class="avatar" src="" style="width: 40px; height: 40px; margin-right: 12px;">
                     <div>
-                        <div id="chat-name" style="font-weight:bold;">User</div>
-                        <div id="chat-status" style="font-size:0.75rem; color:var(--primary);">Online</div>
+                        <div id="chat-name" style="font-weight: 600; font-size: 1rem;">User</div>
+                        <div id="chat-status" style="font-size: 0.75rem; color: var(--text-muted);">Tap for info</div>
                     </div>
                 </div>
                 <div class="header-actions">
+                    <button class="icon-btn" title="Phone Call"><i class="fas fa-phone"></i></button>
                     <button class="icon-btn" id="video-call-btn" title="Video Call"><i class="fas fa-video"></i></button>
                 </div>
-            </div>
+            </header>
 
             <div class="messages-container" id="messages-container">
-                <div class="welcome-msg" style="text-align: center; margin-top: 20%;">
-                    <i class="fas fa-lock" style="font-size: 3rem; margin-bottom: 20px; color: #333;"></i>
-                    <h3>Welcome to Lockrythm</h3>
-                    <p style="color: #666;">Select a contact to start encryption.</p>
+                <div class="empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; opacity:0.5;">
+                    <i class="fas fa-lock" style="font-size: 4rem; margin-bottom: 20px;"></i>
+                    <h3>Lockrythm Secure Chat</h3>
+                    <p>End-to-end encrypted messaging</p>
                 </div>
             </div>
 
-            <div class="input-area" id="input-area" style="display:none;">
+            <div id="recording-overlay" class="recording-ui" style="display: none;">
+                <div class="recording-dot"></div>
+                <span id="rec-timer">00:00</span>
+                <span style="font-size:0.9rem; opacity:0.8;">Release to send</span>
+                <button id="cancel-rec-btn" style="background:rgba(255,255,255,0.2); border:none; border-radius:50%; width:25px; height:25px; color:white; margin-left:10px; cursor:pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <footer class="input-area" id="input-area" style="visibility: hidden;">
                 <input type="file" id="media-input" hidden accept="image/*,video/*">
                 
-                <button class="icon-btn" onclick="document.getElementById('media-input').click()" title="Send Photo/Video">
-                    <i class="fas fa-paperclip"></i>
+                <button class="icon-btn" onclick="document.getElementById('media-input').click()">
+                    <i class="fas fa-plus"></i>
                 </button>
-
-                <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
                 
-                <button class="icon-btn" id="mic-btn" title="Record Voice">
+                <div class="input-wrapper">
+                    <input type="text" id="message-input" placeholder="Message..." autocomplete="off">
+                    <button class="icon-btn" style="font-size:1.1rem; margin-right:-5px;">
+                        <i class="far fa-smile"></i>
+                    </button>
+                </div>
+
+                <button class="icon-btn" id="mic-btn" style="background:var(--primary); color:white; width:45px; height:45px; box-shadow:0 4px 10px var(--primary-glow);">
                     <i class="fas fa-microphone"></i>
                 </button>
 
-                <button class="icon-btn" id="send-btn" style="color:var(--primary); display:none;">
+                <button class="icon-btn" id="send-btn" style="display:none; background:var(--primary); color:white; width:45px; height:45px;">
                     <i class="fas fa-paper-plane"></i>
                 </button>
-            </div>
-            
-            <div id="recording-overlay" style="display:none; position:absolute; bottom:80px; left:50%; transform:translateX(-50%); background:red; color:white; padding:10px 20px; border-radius:20px; box-shadow: 0 4px 15px rgba(255,0,0,0.3); align-items: center; gap: 10px;">
-                <i class="fas fa-circle-notch fa-spin"></i> 
-                <span>Recording...</span>
-                <button id="cancel-rec-btn" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold; font-size: 1.2rem;">&times;</button>
-            </div>
+            </footer>
+        </main>
+    </div>
+
+    <div id="call-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:100; flex-direction:column; justify-content:center; align-items:center;">
+        <div style="color:white; margin-bottom:20px; font-size:1.5rem;" id="call-status">Calling...</div>
+        <div style="position:relative; width:100%; max-width:600px; aspect-ratio:16/9; background:#000;">
+            <video id="remoteVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+            <video id="localVideo" autoplay playsinline muted style="position:absolute; bottom:20px; right:20px; width:120px; border-radius:8px; border:2px solid white; box-shadow:0 5px 15px rgba(0,0,0,0.5);"></video>
+        </div>
+        <div style="margin-top:30px; display:flex; gap:20px;">
+            <button id="hangup-btn" style="background:#ef4444; border:none; width:60px; height:60px; border-radius:50%; color:white; font-size:1.5rem; cursor:pointer; box-shadow:0 0 20px rgba(239,68,68,0.4);"><i class="fas fa-phone-slash"></i></button>
         </div>
     </div>
 
-    <div id="call-modal">
-        <div class="call-wrapper" style="text-align: center;">
-            <div style="color:white; margin-bottom:15px; font-size:1.2rem;" id="call-status">Calling...</div>
-            <div class="video-grid" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                <video id="remoteVideo" autoplay playsinline style="max-width: 100%; border-radius: 10px; background: #000;"></video>
-                <video id="localVideo" autoplay playsinline muted style="width: 150px; position: absolute; bottom: 20px; right: 20px; border: 2px solid white; border-radius: 8px;"></video>
-            </div>
-            <button class="auth-btn" style="background:red; width: auto; padding: 10px 30px; margin-top: 20px;" id="hangup-btn">
-                <i class="fas fa-phone-slash"></i> End Call
-            </button>
-        </div>
-    </div>
+    <script>
+        // Simple function to handle mobile view toggling
+        // This will be triggered by your main chat.js when a user is clicked
+        function openChatUI() {
+            document.getElementById('app-container').classList.add('show-chat');
+            document.getElementById('chat-header').style.visibility = 'visible';
+            document.getElementById('input-area').style.visibility = 'visible';
+        }
+
+        function closeChat() {
+            document.getElementById('app-container').classList.remove('show-chat');
+            // Optional: clear active selection visuals if necessary
+        }
+
+        // Attach this to the window so chat.js can call it
+        window.openChatUI = openChatUI;
+    </script>
 
     <script type="module" src="js/chat.js"></script>
 </body>
